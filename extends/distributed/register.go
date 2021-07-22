@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
+	"github.com/corneliusludmann/cdp-cache/backends"
+	"github.com/corneliusludmann/cdp-cache/pkg/helper"
 	"github.com/google/uuid"
 	"github.com/hashicorp/consul/api"
 	"github.com/hashicorp/consul/api/watch"
-	"github.com/sillygod/cdp-cache/backends"
-	"github.com/sillygod/cdp-cache/pkg/helper"
 )
 
 var (

@@ -3,10 +3,12 @@ package httpcache
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"hash/crc32"
 	"io"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"net/url"
@@ -16,9 +18,9 @@ import (
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
+	"github.com/corneliusludmann/cdp-cache/backends"
+	"github.com/corneliusludmann/cdp-cache/extends/distributed"
 	"github.com/pquerna/cachecontrol/cacheobject"
-	"github.com/sillygod/cdp-cache/backends"
-	"github.com/sillygod/cdp-cache/extends/distributed"
 )
 
 // Module lifecycle
@@ -431,7 +433,28 @@ func (h *HTTPCache) getBucketIndexForKey(key string) uint32 {
 // In caddy2, it is automatically add the map by addHTTPVarsToReplacer
 func getKey(cacheKeyTemplate string, r *http.Request) string {
 	repl := r.Context().Value(caddy.ReplacerCtxKey).(*caddy.Replacer)
+	repl.Set("http.request.contentlength", r.ContentLength)
+	bodyHash := bodyHash(r)
+	if len(bodyHash) > 0 {
+		repl.Set("http.request.bodyhash", bodyHash)
+	}
 	return repl.ReplaceKnown(cacheKeyTemplate, "")
+}
+
+func bodyHash(r *http.Request) string {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return ""
+	}
+
+	h := sha1.New()
+	h.Write(body)
+	bs := h.Sum(nil)
+	result := fmt.Sprintf("%x", bs)
+
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+	return result
 }
 
 // Get returns the cached response

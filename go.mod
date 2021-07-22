@@ -1,10 +1,10 @@
-module github.com/sillygod/cdp-cache
+module github.com/corneliusludmann/cdp-cache
 
 go 1.16
 
 require (
 	github.com/caddyserver/caddy/v2 v2.4.1
-	github.com/caddyserver/certmagic v0.13.1 // indirect
+	github.com/caddyserver/certmagic v0.13.1
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/consul/api v1.8.1

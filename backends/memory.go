@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/caddyserver/caddy/v2"
+	"github.com/corneliusludmann/cdp-cache/pkg/helper"
 	"github.com/mailgun/groupcache/v2"
-	"github.com/sillygod/cdp-cache/pkg/helper"
 )
 
 type ctxKey string

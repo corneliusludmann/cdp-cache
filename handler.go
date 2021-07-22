@@ -12,10 +12,10 @@ import (
 
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
+	"github.com/corneliusludmann/cdp-cache/backends"
+	"github.com/corneliusludmann/cdp-cache/extends/distributed"
+	"github.com/corneliusludmann/cdp-cache/pkg/helper"
 	"github.com/hashicorp/consul/api"
-	"github.com/sillygod/cdp-cache/backends"
-	"github.com/sillygod/cdp-cache/extends/distributed"
-	"github.com/sillygod/cdp-cache/pkg/helper"
 	"go.uber.org/zap"
 )
 
@@ -329,7 +329,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyht
 
 	}(h, start)
 
-	if !shouldUseCache(r) {
+	if !shouldUseCache(r, h.Config) {
 		h.addStatusHeaderIfConfigured(w, cacheBypass)
 		return next.ServeHTTP(w, r)
 	}

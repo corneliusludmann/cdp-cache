@@ -55,6 +55,7 @@ const (
 	keyPath                   = "path"
 	keyMatchHeader            = "match_header"
 	keyMatchPath              = "match_path"
+	keyMatchMethod            = "match_methods"
 	keyCacheKey               = "cache_key"
 	keyCacheBucketsNum        = "cache_bucket_num"
 	keyCacheMaxMemorySize     = "cache_max_memory_size"
@@ -80,6 +81,7 @@ type Config struct {
 	LockTimeout            time.Duration            `json:"lock_timeout,omitempty"`
 	RuleMatchersRaws       []RuleMatcherRawWithType `json:"rule_matcher_raws,omitempty"`
 	RuleMatchers           []RuleMatcher            `json:"-"`
+	MatchMethods           []string                 `json:"match_methods,omitempty"`
 	CacheBucketsNum        int                      `json:"cache_buckets_num,omitempty"`
 	CacheMaxMemorySize     int                      `json:"cache_max_memory_size,omitempty"`
 	Path                   string                   `json:"path,omitempty"`
@@ -210,6 +212,12 @@ func (h *Handler) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 					Type: MatcherTypePath,
 					Data: data,
 				})
+
+			case keyMatchMethod:
+				if len(args) < 2 {
+					return d.Err("Invalid usage of match_method in cache config.")
+				}
+				config.MatchMethods = append(config.MatchMethods, args...)
 
 			case keyCacheKey:
 				if len(args) != 1 {
