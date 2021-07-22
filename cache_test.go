@@ -216,7 +216,7 @@ func (suite *HTTPCacheTestSuite) SetupSuite() {
 
 func (suite *HTTPCacheTestSuite) TestGetNonExistEntry() {
 	req := makeRequest("/", http.Header{})
-	entry, exists := suite.cache.Get("abc", req)
+	entry, exists := suite.cache.Get("abc", req, false)
 	suite.Nil(entry)
 	suite.False(exists)
 }
@@ -240,7 +240,7 @@ func (suite *HTTPCacheTestSuite) TestGetExistEntry() {
 	entry := NewEntry("hello", req, res, suite.config)
 	suite.cache.Put(req, entry)
 
-	prevEntry, exists := suite.cache.Get("hello", req)
+	prevEntry, exists := suite.cache.Get("hello", req, false)
 	suite.Equal(prevEntry, entry)
 	suite.True(exists)
 }

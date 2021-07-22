@@ -434,10 +434,7 @@ func (h *HTTPCache) getBucketIndexForKey(key string) uint32 {
 func getKey(cacheKeyTemplate string, r *http.Request) string {
 	repl := r.Context().Value(caddy.ReplacerCtxKey).(*caddy.Replacer)
 	repl.Set("http.request.contentlength", r.ContentLength)
-	bodyHash := bodyHash(r)
-	if len(bodyHash) > 0 {
-		repl.Set("http.request.bodyhash", bodyHash)
-	}
+	repl.Set("http.request.bodyhash", bodyHash(r))
 	return repl.ReplaceKnown(cacheKeyTemplate, "")
 }
 
@@ -458,7 +455,7 @@ func bodyHash(r *http.Request) string {
 }
 
 // Get returns the cached response
-func (h *HTTPCache) Get(key string, request *http.Request) (*Entry, bool) {
+func (h *HTTPCache) Get(key string, request *http.Request, includeStale bool) (*Entry, bool) {
 	b := h.getBucketIndexForKey(key)
 	h.entriesLock[b].RLock()
 	defer h.entriesLock[b].RUnlock()
@@ -470,7 +467,7 @@ func (h *HTTPCache) Get(key string, request *http.Request) (*Entry, bool) {
 	}
 
 	for _, entry := range previousEntries {
-		if entry.IsFresh() && matchVary(request, entry) {
+		if (entry.IsFresh() || includeStale) && matchVary(request, entry) {
 			return entry, true
 		}
 	}
@@ -596,7 +593,9 @@ func (h *HTTPCache) cleanEntry(entry *Entry) error {
 
 func (h *HTTPCache) scheduleCleanEntry(entry *Entry) {
 	go func(entry *Entry) {
-		time.Sleep(entry.expiration.Sub(time.Now()))
+		expiration := entry.expiration
+		expiration = expiration.Add(7 * 24 * time.Hour) // add stale grace period TODO: make configurable
+		time.Sleep(expiration.Sub(time.Now()))
 		h.cleanEntry(entry)
 	}(entry)
 }
