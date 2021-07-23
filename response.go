@@ -146,22 +146,15 @@ func (r *Response) WriteHeader(code int) {
 
 func shouldUseCache(req *http.Request, config *Config) bool {
 
-	if len(config.MatchMethods) > 0 {
-		match := false
-		for _, method := range config.MatchMethods {
-			if method == req.Method {
-				match = true
-				break
-			}
+	matchMethod := false
+	for _, method := range config.MatchMethods {
+		if method == req.Method {
+			matchMethod = true
+			break
 		}
-		if !match {
-			return false
-		}
-	} else {
-		if req.Method != "GET" && req.Method != "HEAD" {
-			// Only cache Get and head request by default
-			return false
-		}
+	}
+	if !matchMethod {
+		return false
 	}
 
 	// Range requests still not supported

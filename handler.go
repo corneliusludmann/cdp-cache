@@ -365,7 +365,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyht
 			return caddyhttp.Error(http.StatusInternalServerError, err)
 		}
 
-		h.Cache.Put(r, entry)
+		h.Cache.Put(r, entry, h.Config)
 		response.Close()
 
 		// NOTE: should set the content-length to the header manually when distributed
@@ -422,7 +422,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyht
 			return caddyhttp.Error(http.StatusInternalServerError, err)
 		}
 
-		h.Cache.Put(r, entry)
+		h.Cache.Put(r, entry, h.Config)
 		err = h.respond(w, entry, cacheMiss)
 		if err != nil {
 			h.logger.Error("cache handler", zap.Error(err))

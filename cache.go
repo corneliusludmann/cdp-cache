@@ -534,14 +534,14 @@ func (h *HTTPCache) Del(key string) error {
 }
 
 // Put adds the entry in the cache
-func (h *HTTPCache) Put(request *http.Request, entry *Entry) {
+func (h *HTTPCache) Put(request *http.Request, entry *Entry, config *Config) {
 	key := entry.Key()
 	bucket := h.getBucketIndexForKey(key)
 
 	h.entriesLock[bucket].Lock()
 	defer h.entriesLock[bucket].Unlock()
 
-	h.scheduleCleanEntry(entry)
+	h.scheduleCleanEntry(entry, config.StaleMaxAge)
 
 	for i, previousEntry := range h.entries[bucket][key] {
 		if matchVary(entry.Request, previousEntry) {
@@ -607,10 +607,10 @@ func (h *HTTPCache) cleanEntry(entry *Entry) error {
 	return nil
 }
 
-func (h *HTTPCache) scheduleCleanEntry(entry *Entry) {
+func (h *HTTPCache) scheduleCleanEntry(entry *Entry, staleMaxAge time.Duration) {
 	go func(entry *Entry) {
 		expiration := entry.expiration
-		expiration = expiration.Add(7 * 24 * time.Hour) // add stale grace period TODO: make configurable
+		expiration = expiration.Add(staleMaxAge)
 		time.Sleep(expiration.Sub(time.Now()))
 		h.cleanEntry(entry)
 	}(entry)
