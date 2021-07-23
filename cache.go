@@ -433,8 +433,21 @@ func (h *HTTPCache) getBucketIndexForKey(key string) uint32 {
 // In caddy2, it is automatically add the map by addHTTPVarsToReplacer
 func getKey(cacheKeyTemplate string, r *http.Request) string {
 	repl := r.Context().Value(caddy.ReplacerCtxKey).(*caddy.Replacer)
-	repl.Set("http.request.contentlength", r.ContentLength)
-	repl.Set("http.request.bodyhash", bodyHash(r))
+	if _, ok := repl.Get("http.request.contentlength"); !ok {
+		// Add contentlength and bodyhash when not added before
+		fmt.Println("CLU adding content length") // TODO: remove debug log
+
+		repl.Set("http.request.contentlength", r.ContentLength)
+		// repl.Set("http.request.bodyhash", bodyHash(r))
+		repl.Map(func(key string) (interface{}, bool) {
+			if key == "http.request.bodyhash" {
+				return bodyHash(r), true
+			}
+			return nil, false
+		})
+	} else {
+		fmt.Println("CLU content length already added before") // TODO: remove debug log
+	}
 	return repl.ReplaceKnown(cacheKeyTemplate, "")
 }
 
@@ -450,6 +463,9 @@ func bodyHash(r *http.Request) string {
 	result := fmt.Sprintf("%x", bs)
 
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+	fmt.Println("CLU body: ", body) // TODO: remove debug log
+	fmt.Println("CLU bodyHash: ", result) // TODO: remove debug log
 
 	return result
 }
